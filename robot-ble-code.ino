@@ -1,12 +1,10 @@
 
 #include <ArduinoBLE.h>
 #include "CustomFunctions.h"
-
 // There are redundant comments for our sanity, in case we forget what this code does
 // The peripheral device here is the Arduino board
 
 BLEService RobotControlService("d9983f88-e3f4-4160-827f-5b9f36a070dd"); // Custom Service UUID
-
 BLEStringCharacteristic driveCmdChrstic("d9983f88-e3f4-4160-827f-5b9f36a070de", BLERead | BLEWrite, 20); // enable read write permissions on this characteristic. changed the last character of uuid from a 'd' to an 'e'
 
 void setup() {
@@ -15,7 +13,7 @@ void setup() {
 
   if (!BLE.begin()) {
     Serial.println("Starting BLE failed!");
-    while (1); // denial of service lol
+    while (1); // denial of service
   }
 
   // Set advertising packetes
@@ -36,5 +34,5 @@ void setup() {
 }
 
 void loop() {
-  
+  // ...  
 }
