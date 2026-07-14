@@ -7,6 +7,7 @@
 
 BLEService RobotControlService("d9983f88-e3f4-4160-827f-5b9f36a070dd");                                   // Custom Service UUID
 BLEStringCharacteristic driveCmdChrstic("d9983f88-e3f4-4160-827f-5b9f36a070de", BLERead | BLEWrite, 20);  // enable read write permissions on this characteristic. changed the last character of uuid from a 'd' to an 'e'
+float x = 0.0, y = 0.0, w = 0.0; 
 
 void setup() {
   Serial.begin(9600);
@@ -28,7 +29,7 @@ void setup() {
   // Add the service
   BLE.addService(RobotControlService);
 
-  // Set an initial value for the characteristic
+  // Set an initial value for the characteristic  
   driveCmdChrstic.writeValue("0, 0, 0");  // "velocity x, velocity y, rotational velocity ω", where (x, y, and ω) ∈ [-1.0, 1.0]
 
   // Send the advertising packets. You should now see the arduino on the central (or client) device bluetooth list
@@ -37,20 +38,21 @@ void setup() {
 
 void loop() {
   BLEDevice central = BLE.central(); // listen for central devices. 
-  int val; 
+
+  String driveCmds = driveCmdChrstic.value();
 
   if (central) {
-    Serial.print("Connected; Initial value: ");  
-    Serial.println(driveCmdChrstic.value()); 
+    // lcdPrintVals(x, y, w);
   }
-
+  
   while (central.connected()) {
     if (driveCmdChrstic.written()) {
-      lcd.clear();
-      lcd.setCursor(0, 0); 
+      driveCmds = driveCmdChrstic.value(); 
       
-      Serial.println(driveCmdChrstic.value());
-      lcd.print(driveCmdChrstic.value()); 
+      if (driveCmds.startsWith("X:"))      { x = driveCmds.substring(driveCmds.indexOf(":") + 1).toFloat(); } // starting index is inclusive      
+      else if (driveCmds.startsWith("Y:")) { y = driveCmds.substring(driveCmds.indexOf(":") + 1).toFloat(); }
+      else if (driveCmds.startsWith("W:")) { w = driveCmds.substring(driveCmds.indexOf(":") + 1).toFloat(); }
+      lcdPrintVals(x, y, w); 
     }
   }
 }
