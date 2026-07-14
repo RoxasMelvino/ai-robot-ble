@@ -18,7 +18,7 @@ void setup() {
 
   // Set advertising packetes
   BLE.setLocalName("Clanker"); // this is what the central device (iPhone in this case for now) will see in the bluetooth list
-  BLE.setAdvertisedService(RobotControlService); // specific service the peripheral device will provide
+  BLE.setAdvertisedService(RobotControlService); // specific service the peripheral device (the board) will provide
 
   // Add characteristics to service
   RobotControlService.addCharacteristic(driveCmdChrstic);
@@ -27,12 +27,12 @@ void setup() {
   BLE.addService(RobotControlService);
 
   // Set an initial value for the characteristic
-  driveCmdChrstic.writeValue("0, 0, 0"); 
+  driveCmdChrstic.writeValue("0, 0, 0"); // "velocity x, velocity y, rotational velocity ω", where (x, y, and ω) ∈ [-1.0, 1.0]
 
   // Send the advertising packets. You should now see the arduino on the central (or client) device bluetooth list
   BLE.advertise();
 }
 
 void loop() {
-  // ...  
+  
 }
