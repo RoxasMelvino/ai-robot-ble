@@ -7,3 +7,15 @@ void lcdInit(int numCols, int numRows, int cursorCol, int cursorRow) {
   lcd.setCursor(0, 0);
   lcd.print("Ready to move");
 } 
+
+void lcdPrintVals(float x, float y, float w) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("X    Y    W");
+  lcd.setCursor(0, 1); 
+  lcd.print(x);
+  lcd.print(" ");
+  lcd.print(y);
+  lcd.print(" ");
+  lcd.print(w);
+} 

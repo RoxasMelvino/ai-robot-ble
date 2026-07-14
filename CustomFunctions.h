@@ -6,5 +6,6 @@
 extern LiquidCrystal lcd; 
 
 void lcdInit(int numCols = 16, int numRows = 2, int cursorCol = 0, int cursorRow = 0); 
+void lcdPrintVals(float x, float y, float w);
 
 #endif // __CUSTOM_FUNCTIONS_H__
