@@ -1,5 +1,6 @@
 
 #include <ArduinoBLE.h>
+#include <algorithm>
 #include "CustomFunctions.h"
 
 // There are redundant comments for our sanity, in case we forget what this code does
@@ -7,7 +8,11 @@
 
 BLEService RobotControlService("d9983f88-e3f4-4160-827f-5b9f36a070dd");                                   // Custom Service UUID
 BLEStringCharacteristic driveCmdChrstic("d9983f88-e3f4-4160-827f-5b9f36a070de", BLERead | BLEWrite, 20);  // enable read write permissions on this characteristic. changed the last character of uuid from a 'd' to an 'e'
-float x = 0.0, y = 0.0, w = 0.0; 
+
+float x = 0.0, y = 0.0, w = 0.0, speed = 0.0; 
+float minPercent = 0.0; 
+float maxPercent = 1.0; 
+int motorPin = 10; 
 
 void setup() {
   Serial.begin(9600);
@@ -36,6 +41,7 @@ void setup() {
   BLE.advertise();
 }
 
+
 void loop() {
   BLEDevice central = BLE.central(); // listen for central devices. 
 
@@ -45,13 +51,32 @@ void loop() {
     // lcdPrintVals(x, y, w);
   }
   
+
+  // NOTE: The Orange Pi 5B will send data (the continuous action spacde) to the Arduino board like so: "0.2, 0.5, 1.0" 
+  //  which means 20% to the x direction, 50% to the y, 100% rotational velocity
   while (central.connected()) {
     if (driveCmdChrstic.written()) {
       driveCmds = driveCmdChrstic.value(); 
-      
-      if (driveCmds.startsWith("X:"))      { x = driveCmds.substring(driveCmds.indexOf(":") + 1).toFloat(); } // starting index is inclusive      
-      else if (driveCmds.startsWith("Y:")) { y = driveCmds.substring(driveCmds.indexOf(":") + 1).toFloat(); }
-      else if (driveCmds.startsWith("W:")) { w = driveCmds.substring(driveCmds.indexOf(":") + 1).toFloat(); }
+
+      if (driveCmds.startsWith("X:")) { // only accept values between 0 to 1 for percentage 
+        x = driveCmds.substring(driveCmds.indexOf(":") + 1).toFloat(); 
+      }       
+      else if (driveCmds.startsWith("Y:")) { 
+        float val = y + driveCmds.substring(driveCmds.indexOf(":") + 1).toFloat();  
+        y = std::clamp(val, minPercent, maxPercent); 
+        
+        // Serial.println(y); 
+        // Serial.println(speed * y); 
+        drive(y, speed, motorPin);
+      }
+      else if (driveCmds.startsWith("W:")) { 
+        w = driveCmds.substring(driveCmds.indexOf(":") + 1).toFloat(); 
+      } 
+      else if(driveCmds.startsWith("S")) { // Speed_
+        speed = driveCmds.substring(driveCmds.indexOf("_") + 1).toFloat(); 
+        Serial.println(speed);
+      } 
+    
       lcdPrintVals(x, y, w); 
     }
   }
