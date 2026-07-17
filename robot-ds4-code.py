@@ -1,9 +1,17 @@
 import evdev
+import serial
+import time
 
-raw_vals = { "ABS_X" : 0.00, "ABS_Y" : 0.00, "ABS_RX": 0.00 }
+ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+time.sleep(2)
+print(ser.name)
+
 js_max = 255
 js_center = js_max / 2
-deadzone_thresh = 0.06
+js_raw_x = js_center
+js_raw_y = js_center
+js_raw_w = js_center
+deadzone_thresh = 0.10
 
 #search for devices
 devices = [evdev.InputDevice(path) for path in evdev.list_devices()] 
@@ -18,16 +26,17 @@ for event in ds4Controller.read_loop():
     if event.type == evdev.ecodes.EV_ABS:
         button_name = evdev.ecodes.ABS[event.code]
         if (button_name == "ABS_X"):
-            raw_vals[button_name] = event.value
+            js_raw_x = event.value
         elif (button_name == "ABS_Y"):
-            raw_vals[button_name] = event.value
+            js_raw_y = event.value
         elif (button_name == "ABS_RX"):
-            raw_vals[button_name] = event.value
-    
+            js_raw_w = event.value
+            
+    if event.type == evdev.ecodes.EV_SYN :
         # we need the center to be 0, otherwise the motors will move by themselves
-        x_percent = round((raw_vals["ABS_X"] - js_center) / (js_max - js_center), 2)
-        y_percent = round((raw_vals["ABS_Y"] - js_center) / (js_max - js_center), 2) * -1
-        w_percent = round((raw_vals["ABS_RX"] - js_center) / (js_max - js_center), 2)
+        x_percent = round((js_raw_x - js_center) / (js_max - js_center), 2)
+        y_percent = round((js_raw_y - js_center) / (js_max - js_center), 2) * -1
+        w_percent = round((js_raw_w - js_center) / (js_max - js_center), 2)
         
         if (abs(x_percent) < deadzone_thresh) : x_percent = 0.00
         if (abs(y_percent) < deadzone_thresh) : y_percent = 0.00
@@ -35,6 +44,15 @@ for event in ds4Controller.read_loop():
         
         action_space = f"{x_percent},{y_percent},{w_percent}\n"
         print(action_space)
+        ser.write(action_space.encode())
+        ser.flush()
+        if ser.in_waiting > 0 :
+            print("Arduino Serial", ser.readline().decode('utf-8'))
+        
+        
+        
+
+ser.close()
 
 # The values of joysticks and triggers range from 0 to 255, but we mainly care about the joysticks for now.
 # the center needs to be 0, otherwise the motors wil move on their own 
